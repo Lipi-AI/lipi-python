@@ -18,6 +18,7 @@ from lipi.exceptions import (
     RateLimitError,
     ServerError,
     TimeoutError,
+    ValidationError,
 )
 from lipi.models import (
     BatchStats,
@@ -61,6 +62,7 @@ __all__ = [
     "RateLimitError",
     "ServerError",
     "TimeoutError",
+    "ValidationError",
 ]
 
 

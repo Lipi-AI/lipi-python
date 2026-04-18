@@ -116,10 +116,18 @@ URL_SCAN_SUCCEEDED_RESPONSE = {
     ],
     "license_results": [
         {
-            "font_name": "Inter",
+            "family": "Inter",
+            "found_in_db": True,
+            "license_model": "OFL",
             "risk_level": "low",
-            "license_type": "SIL Open Font License",
-            "commercial_use": True,
+            "commercial_use": "Allowed",
+            "web_use": "Allowed",
+            "foundry": "Google",
+            "confidence": 95,
+            "license_url": "",
+            "source_name": "Google Fonts",
+            "license_summary": "SIL Open Font License",
+            "disclaimer": "Informational only, not legal advice.",
         }
     ],
     "compliance_summary": {

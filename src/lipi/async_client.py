@@ -25,6 +25,7 @@ from lipi.exceptions import (
     RateLimitError,
     ServerError,
     TimeoutError,
+    ValidationError,
 )
 from lipi.models import (
     ComplianceSummary,
@@ -103,8 +104,13 @@ class AsyncClient:
                 raise InsufficientCreditsError(msg, status_code=code)
             elif code == 403:
                 raise AuthenticationError(msg, status_code=code)
-            elif code in (413, 422):
+            elif code == 413:
                 raise ImageError(msg, status_code=code)
+            elif code == 422:
+                error_type = data.get("error", "")
+                if error_type in ("invalid_image", "payload_too_large"):
+                    raise ImageError(msg, status_code=code)
+                raise ValidationError(msg, status_code=code)
             elif code == 429:
                 retry = data.get("retry_after_seconds", 60)
                 raise RateLimitError(msg, retry_after=retry, status_code=code)

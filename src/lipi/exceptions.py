@@ -28,7 +28,11 @@ class RateLimitError(LipiError):
         super().__init__(message, **kwargs)
 
 
-class ImageError(LipiError):
+class ValidationError(LipiError):
+    """Request validation failed (HTTP 422) — invalid image, URL, or parameters."""
+
+
+class ImageError(ValidationError):
     """Image is invalid, too large, or unsupported format (HTTP 413/422)."""
 
 

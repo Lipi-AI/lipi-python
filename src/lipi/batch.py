@@ -337,9 +337,14 @@ def batch_url_scan(
                             "font_family": font.family,
                             "weights": ", ".join(font.weights),
                             "risk_level": license_info.risk_level if license_info else "",
-                            "license_type": license_info.license_type if license_info else "",
+                            "license_type": (
+                                license_info.license_type
+                                or license_info.license_summary
+                                or license_info.license_model
+                                if license_info else ""
+                            ),
                             "commercial_use": (
-                                str(license_info.commercial_use) if license_info else ""
+                                license_info.commercial_use if license_info else ""
                             ),
                             "overall_risk": result.compliance_summary.overall_risk,
                             "overall_score": result.compliance_summary.overall_score,

@@ -19,6 +19,7 @@ from lipi.exceptions import (
     LipiError,
     RateLimitError,
     ServerError,
+    ValidationError,
 )
 from lipi.models import (
     CreditBalance,
@@ -163,8 +164,13 @@ class Client:
                 if error_type in ("key_revoked", "key_suspended"):
                     raise AuthenticationError(msg, status_code=code)
                 raise AuthenticationError(msg, status_code=code)
-            elif code in (413, 422):
+            elif code == 413:
                 raise ImageError(msg, status_code=code)
+            elif code == 422:
+                error_type = data.get("error", "")
+                if error_type in ("invalid_image", "payload_too_large"):
+                    raise ImageError(msg, status_code=code)
+                raise ValidationError(msg, status_code=code)
             elif code == 429:
                 retry = data.get("retry_after_seconds", 60)
                 raise RateLimitError(msg, retry_after=retry, status_code=code)

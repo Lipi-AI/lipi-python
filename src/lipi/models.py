@@ -94,10 +94,24 @@ class FontDetected(BaseModel):
 class LicenseResult(BaseModel):
     """License/compliance info for a detected font."""
 
-    font_name: str
-    risk_level: str  # low, medium, high, unknown
-    license_type: str = ""
-    commercial_use: bool = False
+    family: str = ""
+    font_name: Optional[str] = None  # alias used in Postman docs
+    risk_level: str = "unknown"  # low, medium, high, unknown
+    license_type: Optional[str] = None
+    license_model: str = ""
+    commercial_use: str = ""  # "Allowed", "Not Allowed - ...", "Unknown", etc.
+    web_use: str = ""
+    foundry: str = ""
+    confidence: float = 0
+    found_in_db: bool = False
+    license_url: str = ""
+    source_name: str = ""
+    license_summary: str = ""
+    disclaimer: str = ""
+
+    @property
+    def name(self) -> str:
+        return self.font_name or self.family
 
 
 class ComplianceSummary(BaseModel):
@@ -115,8 +129,8 @@ class ComplianceSummary(BaseModel):
 class UrlScanJob(BaseModel):
     """Status of a URL scan job."""
 
-    job_id: str
-    status: str
+    job_id: str = ""  # empty for cached responses
+    status: str = "pending"  # may be absent for cached responses
     progress: int = 0
     stage: str = "queued"
     url: Optional[str] = None
@@ -148,6 +162,13 @@ class UrlScanJob(BaseModel):
     @property
     def succeeded(self) -> bool:
         return self.status == "succeeded" or self.cached
+
+    def model_post_init(self, __context: Any) -> None:
+        # Cached responses from the API have no job_id/status
+        if self.cached and not self.job_id:
+            self.job_id = "cached"
+        if self.cached and self.status == "pending":
+            self.status = "succeeded"
 
 
 class UrlScanResult(BaseModel):

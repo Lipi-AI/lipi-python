@@ -166,7 +166,11 @@ def url_scan_cmd(url: str, as_json: bool, output: str, timeout: float):
             f"  {click.style(risk, fg=color)}"
         )
         if lic:
-            click.echo(f"    License: {lic.license_type}")
+            label = lic.license_type or lic.license_summary or lic.license_model
+            if label:
+                click.echo(f"    License: {label}")
+            if lic.commercial_use and lic.commercial_use != "Unknown":
+                click.echo(f"    Commercial: {lic.commercial_use}")
 
     click.echo()
     _print_credits(client)

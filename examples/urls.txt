@@ -1,0 +1,11 @@
+# Batch URL scan test - mix of big sites with different font strategies
+https://stripe.com
+https://linear.app
+https://vercel.com
+https://github.com
+https://notion.so
+https://figma.com
+https://aws.amazon.com
+https://openai.com
+https://anthropic.com
+https://spotify.com
