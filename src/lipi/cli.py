@@ -45,7 +45,7 @@ def auth():
 def auth_set_key(api_key: str):
     """Save your API key to ~/.lipi/config.toml."""
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-    CONFIG_FILE.write_text(f'api_key = "{api_key}"\n')
+    CONFIG_FILE.write_text(f'api_key = "{api_key}"\n', encoding="utf-8")
     click.echo(f"API key saved to {CONFIG_FILE}")
 
 
@@ -53,7 +53,7 @@ def auth_set_key(api_key: str):
 def auth_show():
     """Show the currently configured API key."""
     if CONFIG_FILE.exists():
-        text = CONFIG_FILE.read_text().strip()
+        text = CONFIG_FILE.read_text(encoding="utf-8").strip()
         click.echo(text)
     else:
         click.echo("No API key configured. Run: lipi auth set-key <your-key>")
@@ -81,7 +81,7 @@ def font_match_cmd(image: str, as_json: bool, output: str, timeout: float):
         data = result.model_dump(mode="json")
         text = json.dumps(data, indent=2)
         if output:
-            Path(output).write_text(text)
+            Path(output).write_text(text, encoding="utf-8")
             click.echo(f"Results saved to {output}")
         else:
             click.echo(text)
@@ -130,7 +130,7 @@ def url_scan_cmd(url: str, as_json: bool, output: str, timeout: float):
         data = result.model_dump(mode="json")
         text = json.dumps(data, indent=2)
         if output:
-            Path(output).write_text(text)
+            Path(output).write_text(text, encoding="utf-8")
             click.echo(f"Results saved to {output}")
         else:
             click.echo(text)
