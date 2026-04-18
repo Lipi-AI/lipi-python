@@ -40,7 +40,8 @@ class TestApiKeyResolution:
     def test_config_file(self, tmp_path):
         config = tmp_path / "config.toml"
         config.write_text('api_key = "lpi_file"\n')
-        with patch("lipi.client.CONFIG_FILE", config):
+        with patch.dict(os.environ, {}, clear=True), \
+             patch("lipi.client.CONFIG_FILE", config):
             assert _resolve_api_key(None) == "lpi_file"
 
     def test_no_key_raises(self):
