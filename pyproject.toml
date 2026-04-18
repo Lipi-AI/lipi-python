@@ -1,0 +1,66 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "lipi"
+version = "0.1.0"
+description = "Python SDK for the Lipi.ai Font Intelligence API"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.9"
+authors = [
+    { name = "Lipi.ai", email = "dev@lipi.ai" },
+]
+keywords = ["font", "typography", "font-identification", "font-recognition", "lipi", "ai"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Multimedia :: Graphics",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
+dependencies = [
+    "requests>=2.28",
+    "pydantic>=2.0",
+    "click>=8.0",
+]
+
+[project.optional-dependencies]
+async = ["httpx>=0.25"]
+dev = [
+    "pytest>=7.0",
+    "pytest-asyncio>=0.21",
+    "responses>=0.23",
+    "ruff>=0.1",
+]
+
+[project.scripts]
+lipi = "lipi.cli:cli"
+
+[project.urls]
+Homepage = "https://lipi.ai"
+Documentation = "https://lipi.ai/guide/api-setup"
+Repository = "https://github.com/lipi-ai/lipi-python"
+Issues = "https://github.com/lipi-ai/lipi-python/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/lipi"]
+
+[tool.ruff]
+target-version = "py39"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
