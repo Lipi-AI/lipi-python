@@ -97,7 +97,8 @@ def font_match_cmd(image: str, as_json: bool, output: str, timeout: float):
     click.echo(f"Found {len(result.results)} text region(s):\n")
 
     for tr in result.results:
-        click.echo(f'  {click.style(f"\"{tr.text}\"", fg="cyan", bold=True)}')
+        quoted = '"{}"'.format(tr.text)
+        click.echo(f"  {click.style(quoted, fg='cyan', bold=True)}")
         click.echo(f"  Best match:  {click.style(tr.best_match, fg='green', bold=True)}")
         if tr.commercial_alternatives:
             click.echo(f"  Commercial:  {', '.join(tr.commercial_alternatives)}")
