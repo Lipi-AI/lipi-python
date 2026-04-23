@@ -1,8 +1,7 @@
 """Tests for batch processing and crash recovery."""
 
 import csv
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -11,10 +10,9 @@ from lipi.batch import (
     _load_completed,
     _load_failed,
     batch_font_match,
-    batch_url_scan,
 )
 from lipi.exceptions import InsufficientCreditsError, JobFailedError
-from lipi.models import FontMatchResult, TextResult, FontMatch
+from lipi.models import FontMatch, FontMatchResult, TextResult
 
 
 def _make_result(job_id="job-1", texts=None):
@@ -158,7 +156,9 @@ class TestBatchFontMatch:
                 ],
             )
             writer.writeheader()
-            for name, status in [("img1.png", "succeeded"), ("img2.png", "failed"), ("img3.jpg", "succeeded")]:
+            for name, status in [
+                ("img1.png", "succeeded"), ("img2.png", "failed"), ("img3.jpg", "succeeded")
+            ]:
                 writer.writerow({
                     "filename": name, "status": status, "text": "",
                     "best_match": "", "commercial_alternatives": "",

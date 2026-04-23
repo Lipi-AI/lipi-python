@@ -6,7 +6,7 @@ import base64
 import mimetypes
 import os
 from pathlib import Path
-from typing import Any, BinaryIO, Callable, Dict, List, Optional, Union
+from typing import Any, BinaryIO, Callable, Dict, Optional, Union
 
 import requests
 
@@ -84,6 +84,7 @@ def _compress_image(data: bytes, mime: str) -> tuple:
     """Compress image bytes to fit under _MAX_RAW_BYTES. Returns (data, mime)."""
     try:
         import io
+
         from PIL import Image
     except ImportError:
         raise ImageError(

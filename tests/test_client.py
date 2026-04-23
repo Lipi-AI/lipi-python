@@ -1,7 +1,5 @@
 """Tests for the synchronous Lipi client."""
 
-import base64
-import json
 import os
 from unittest.mock import patch
 
@@ -24,9 +22,9 @@ from tests.conftest import (
     FONT_MATCH_SUBMIT_RESPONSE,
     FONT_MATCH_SUCCEEDED_RESPONSE,
     TEST_API_KEY,
-    USAGE_RESPONSE,
     URL_SCAN_SUBMIT_RESPONSE,
     URL_SCAN_SUCCEEDED_RESPONSE,
+    USAGE_RESPONSE,
 )
 
 
@@ -79,9 +77,9 @@ class TestImageToDataUrl:
             _image_to_data_url("/nonexistent/file.png")
 
     def test_large_image_is_compressed(self, tmp_path, monkeypatch):
-        import io
-        import lipi.client as client_mod
         from PIL import Image
+
+        import lipi.client as client_mod
 
         # Force compression by setting a limit smaller than any PNG but achievable as JPEG
         monkeypatch.setattr(client_mod, "_MAX_RAW_BYTES", 3000)

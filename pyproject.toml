@@ -10,7 +10,7 @@ readme = "README.md"
 license = "MIT"
 requires-python = ">=3.9"
 authors = [
-    { name = "Lipi.ai", email = "dev@lipi.ai" },
+    { name = "Lipi.ai", email = "contact@lipi.ai" },
 ]
 keywords = ["font", "typography", "font-identification", "font-recognition", "lipi", "ai"]
 classifiers = [

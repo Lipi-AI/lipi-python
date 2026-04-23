@@ -1,13 +1,12 @@
 """Tests for the CLI."""
 
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
 from click.testing import CliRunner
 
 from lipi.cli import cli
-from lipi.models import CreditBalance, FontMatchResult, TextResult, FontMatch
+from lipi.models import CreditBalance, FontMatch, FontMatchResult, TextResult
 
 
 @pytest.fixture
