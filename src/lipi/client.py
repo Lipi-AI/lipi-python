@@ -22,6 +22,7 @@ from lipi.exceptions import (
     ValidationError,
 )
 from lipi.models import (
+    ComplianceSummary,
     CreditBalance,
     FontMatchJob,
     FontMatchResult,
@@ -74,36 +75,76 @@ def _resolve_api_key(api_key: Optional[str]) -> str:
     )
 
 
-def _image_to_data_url(image: Union[str, bytes, Path, BinaryIO]) -> str:
-    """Convert various image inputs to a base64 data URL."""
-    if isinstance(image, bytes):
-        encoded = base64.b64encode(image).decode()
-        return f"data:image/png;base64,{encoded}"
+# AWS API Gateway hard limit is 10 MB. Base64 inflates by ~33%, so keep raw
+# bytes under 6 MB to stay well clear of the limit after encoding + JSON overhead.
+_MAX_RAW_BYTES = 6 * 1024 * 1024
 
-    if isinstance(image, (str, Path)):
-        path = Path(image)
-        if path.exists():
-            mime, _ = mimetypes.guess_type(str(path))
-            if not mime:
-                mime = "image/png"
-            data = path.read_bytes()
-            encoded = base64.b64encode(data).decode()
-            return f"data:{mime};base64,{encoded}"
-        # If it's a string that looks like a data URL, pass through
+
+def _compress_image(data: bytes, mime: str) -> tuple:
+    """Compress image bytes to fit under _MAX_RAW_BYTES. Returns (data, mime)."""
+    try:
+        import io
+        from PIL import Image
+    except ImportError:
+        raise ImageError(
+            f"Image is {len(data) // (1024 * 1024)}MB and exceeds the upload limit. "
+            "Install Pillow to enable auto-compression: pip install Pillow"
+        )
+
+    Image.MAX_IMAGE_PIXELS = None  # user-supplied image, not an untrusted source
+    img = Image.open(io.BytesIO(data)).convert("RGB")
+
+    # Pre-scale: cap longest side at 4096px to avoid loading massive pixel grids
+    max_side = 4096
+    w, h = img.size
+    if max(w, h) > max_side:
+        scale = max_side / max(w, h)
+        img = img.resize((max(1, int(w * scale)), max(1, int(h * scale))), Image.LANCZOS)
+
+    for quality in (85, 70, 55, 40):
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG", quality=quality, optimize=True)
+        if len(buf.getvalue()) <= _MAX_RAW_BYTES:
+            return buf.getvalue(), "image/jpeg"
+
+    # Quality reduction alone wasn't enough — halve dimensions until it fits
+    buf = io.BytesIO()
+    while max(img.size) > 64:
+        w, h = img.size
+        img = img.resize((max(1, w // 2), max(1, h // 2)), Image.LANCZOS)
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG", quality=70, optimize=True)
+        if len(buf.getvalue()) <= _MAX_RAW_BYTES:
+            return buf.getvalue(), "image/jpeg"
+
+    return buf.getvalue(), "image/jpeg"
+
+
+def _image_to_data_url(image: Union[str, bytes, Path, BinaryIO]) -> str:
+    """Convert various image inputs to a base64 data URL, compressing if needed."""
+    if isinstance(image, bytes):
+        data, mime = image, "image/png"
+    elif isinstance(image, (str, Path)):
         image_str = str(image)
         if image_str.startswith("data:image/"):
             return image_str
-        raise ImageError(f"File not found: {image}")
+        path = Path(image)
+        if not path.exists():
+            raise ImageError(f"File not found: {image}")
+        mime, _ = mimetypes.guess_type(str(path))
+        mime = mime or "image/png"
+        data = path.read_bytes()
+    elif hasattr(image, "read"):
+        raw = image.read()
+        data = raw.encode() if isinstance(raw, str) else raw
+        mime = "image/png"
+    else:
+        raise ImageError(f"Unsupported image type: {type(image)}")
 
-    # File-like object
-    if hasattr(image, "read"):
-        data = image.read()
-        if isinstance(data, str):
-            data = data.encode()
-        encoded = base64.b64encode(data).decode()
-        return f"data:image/png;base64,{encoded}"
+    if len(data) > _MAX_RAW_BYTES:
+        data, mime = _compress_image(data, mime)
 
-    raise ImageError(f"Unsupported image type: {type(image)}")
+    return f"data:{mime};base64,{base64.b64encode(data).decode()}"
 
 
 class Client:
@@ -133,7 +174,6 @@ class Client:
         self._session = requests.Session()
         self._session.headers.update({
             "x-api-key": self._api_key,
-            "Content-Type": "application/json",
         })
 
     def _request(self, method: str, path: str, **kwargs) -> Dict[str, Any]:
@@ -322,8 +362,7 @@ class Client:
                 page_title=job.page_title,
                 fonts_detected=job.fonts_detected or [],
                 license_results=job.license_results or [],
-                compliance_summary=job.compliance_summary
-                or __import__("lipi.models", fromlist=["ComplianceSummary"]).ComplianceSummary(),
+                compliance_summary=job.compliance_summary or ComplianceSummary(),
                 cached=True,
                 created_at=job.scanned_at,
             )

@@ -1,5 +1,6 @@
 """Tests for the synchronous Lipi client."""
 
+import base64
 import json
 import os
 from unittest.mock import patch
@@ -53,10 +54,10 @@ class TestApiKeyResolution:
 
 class TestImageToDataUrl:
     def test_from_bytes(self):
-        result = _image_to_data_url(b"\x89PNG")
+        result = _image_to_data_url(b"\x89PNG\r\n\x1a\n" + b"\x00" * 10)
         assert result.startswith("data:image/png;base64,")
 
-    def test_from_file_path(self, sample_image):
+    def test_from_file_path_string(self, sample_image):
         result = _image_to_data_url(str(sample_image))
         assert result.startswith("data:image/png;base64,")
 
@@ -68,9 +69,31 @@ class TestImageToDataUrl:
         url = "data:image/png;base64,abc123"
         assert _image_to_data_url(url) == url
 
+    def test_from_file_like(self):
+        import io
+        result = _image_to_data_url(io.BytesIO(b"\x89PNG\r\n\x1a\n" + b"\x00" * 10))
+        assert result.startswith("data:image/png;base64,")
+
     def test_missing_file_raises(self):
         with pytest.raises(ImageError):
             _image_to_data_url("/nonexistent/file.png")
+
+    def test_large_image_is_compressed(self, tmp_path, monkeypatch):
+        import io
+        import lipi.client as client_mod
+        from PIL import Image
+
+        # Force compression by setting a limit smaller than any PNG but achievable as JPEG
+        monkeypatch.setattr(client_mod, "_MAX_RAW_BYTES", 3000)
+
+        # BMP is uncompressed (~30KB for 100x100) so it reliably exceeds the fake limit
+        img = Image.new("RGB", (100, 100), color=(128, 64, 32))
+        bmp = tmp_path / "test.bmp"
+        img.save(bmp, format="BMP")
+        assert len(bmp.read_bytes()) > 3000
+
+        result = _image_to_data_url(bmp)
+        assert result.startswith("data:image/jpeg;base64,")
 
 
 class TestClientHealth:
